@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TheCat</string>
+    <string name="cats">Cats</string>
+    <string name="favorites">Favorites</string>
+
+    <string name="error">Непредвиденная ошибка</string>
+    <string name="network_error">Ошибка при загрузке данных</string>
+    <string name="empty">Ничего не найдено :(</string>
+</resources>
