@@ -1,5 +1,6 @@
 package com.denisov.cat.presentation.presenters
 
+import android.graphics.Bitmap
 import com.denisov.cat.R
 import com.denisov.cat.data.CatsRepository
 import com.denisov.cat.data.dto.Cat
@@ -12,6 +13,7 @@ import com.denisov.cat.presentation.ui.adapter.models.CatViewHolderModel
 import com.denisov.cat.presentation.ui.adapter.models.MoreLoadingViewHolderModel
 import com.denisov.cat.presentation.ui.adapter.viewholders.CatViewHolder
 import com.denisov.cat.presentation.utils.ContextProvider
+import com.denisov.cat.presentation.utils.ImageDownloadManager
 import com.denisov.cat.presentation.utils.subscribeWithoutSuspense
 import com.denisov.cat.presentation.view.CatsView
 import io.reactivex.subjects.PublishSubject
@@ -22,7 +24,8 @@ class CatsPresenter @Inject constructor(
     private val catsRepository: CatsRepository,
     private val catsUseCases: CatsUseCases,
     private val schedulers: Schedulers,
-    private val contextProvider: ContextProvider
+    private val contextProvider: ContextProvider,
+    private val downloadManager: ImageDownloadManager
 ) : BasePresenter<CatsView>(), CatViewHolder.CatItemListener {
 
     @Volatile
@@ -45,10 +48,19 @@ class CatsPresenter @Inject constructor(
                 .retry()
                 .subscribeWithoutSuspense()
         }
+        subscribe {
+            catsRepository
+                .getFavoriteCats()
+                .subscribeOn(schedulers.io)
+                .observeOn(schedulers.ui)
+                .subscribe({ favorites ->
+                    mergeLists(favorites)
+                }, {})
+        }
     }
 
     override fun onCreate() {
-        loadSubject.onNext(page++)
+        onLoadMore()
     }
 
     override fun onFavoriteClick(cat: Cat) {
@@ -59,28 +71,15 @@ class CatsPresenter @Inject constructor(
             }
                 .subscribeOn(schedulers.io)
                 .observeOn(schedulers.ui)
-                .doOnSubscribe { view?.disableTouches() }
-                .doAfterTerminate { view?.enableTouches() }
                 .subscribe({
-                    viewHolders
-                        .indexOfFirst { it is CatViewHolderModel && it.cat.id == cat.id }
-                        .takeIf { it > -1 }
-                        ?.let { index ->
-                            viewHolders[index] =
-                                CatViewHolderModel(cat.copy(isFavorite = !cat.isFavorite))
-                            view?.apply {
-                                setViewHolderModels(viewHolders)
-                                notifyItemChanged(index)
-                            }
-                        }
                 }, {
                     view?.showError(contextProvider.getString(R.string.error))
                 })
         }
     }
 
-    override fun onDownloadClick(cat: Cat) {
-
+    override fun onDownloadClick(cat: Cat, bitmap: Bitmap) {
+        downloadManager.download(Pair(cat, bitmap))
     }
 
     fun onLoadMore() {
@@ -100,15 +99,41 @@ class CatsPresenter @Inject constructor(
                     view?.showProgress()
                 } else {
                     viewHolders.add(MoreLoadingViewHolderModel())
+                    view?.setViewHolderModels(viewHolders)
                 }
             }
             .doAfterTerminate { view?.hideProgress() }
             .doOnSuccess {
                 viewHolders
-                    .indexOfFirst { it is MoreLoadingViewHolderModel }
+                    .indexOfLast { it is MoreLoadingViewHolderModel }
                     .takeIf { it > -1 }
                     ?.let { viewHolders.removeAt(it) }
                 viewHolders.addAll(it)
                 view?.setViewHolderModels(viewHolders)
             }
+
+    private fun mergeLists(favorites: List<Cat>) {
+        viewHolders
+            .filterIsInstance<CatViewHolderModel>()
+            .map { it.cat }
+            .let { cats ->
+                val changedIndexes = mutableListOf<Int>()
+                val sortedFavorites = favorites.toHashSet()
+
+                cats.forEachIndexed { index, cat ->
+                    if (cat.isFavorite && !sortedFavorites.contains(cat)) {
+                        changedIndexes.add(index)
+                        viewHolders[index] = CatViewHolderModel(cat.copy(isFavorite = false))
+                    } else if (!cat.isFavorite && sortedFavorites.contains(cat)) {
+                        changedIndexes.add(index)
+                        viewHolders[index] = CatViewHolderModel(cat.copy(isFavorite = true))
+                    }
+                }
+
+                view?.apply {
+                    setViewHolderModels(viewHolders)
+                    changedIndexes.forEach { notifyItemChanged(it) }
+                }
+            }
+    }
 }

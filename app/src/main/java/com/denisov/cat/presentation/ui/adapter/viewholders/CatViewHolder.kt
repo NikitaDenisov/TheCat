@@ -1,5 +1,7 @@
 package com.denisov.cat.presentation.ui.adapter.viewholders
 
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
@@ -38,8 +40,10 @@ class CatViewHolder(
             }
         }
         downloadButton.setOnClickListener {
-            model?.let {
-                listener.onDownloadClick(it)
+            model?.let { cat ->
+                (imageView.drawable as? BitmapDrawable)
+                    ?.bitmap
+                    ?.let { listener.onDownloadClick(cat, it) }
             }
         }
     }
@@ -82,7 +86,7 @@ class CatViewHolder(
     interface CatItemListener {
         fun onFavoriteClick(cat: Cat)
 
-        fun onDownloadClick(cat: Cat)
+        fun onDownloadClick(cat: Cat, bitmap: Bitmap)
     }
 
     class Factory @Inject constructor(

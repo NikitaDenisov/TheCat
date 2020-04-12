@@ -27,6 +27,8 @@ class CatsFragment : Fragment(), CatsView {
     lateinit var presenter: CatsPresenter
     @Inject
     lateinit var recyclerAdapter: RecyclerAdapter
+    @Inject
+    lateinit var downloadManager: ImageDownloadManager
 
     private lateinit var loadMoreListener: EndlessRecyclerViewScrollListener
 
@@ -51,7 +53,6 @@ class CatsFragment : Fragment(), CatsView {
         super.onViewCreated(view, savedInstanceState)
         recyclerView.apply {
             val gridLayoutManager = StaggeredGridLayoutManager(2, RecyclerView.VERTICAL)
-
             adapter = recyclerAdapter
             layoutManager = gridLayoutManager
             itemAnimator = null
@@ -60,6 +61,14 @@ class CatsFragment : Fragment(), CatsView {
             }
             addOnScrollListener(loadMoreListener)
         }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        downloadManager.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun setViewHolderModels(viewHolderModels: List<ViewHolderModel>) {
@@ -74,14 +83,6 @@ class CatsFragment : Fragment(), CatsView {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
-    override fun disableTouches() {
-        activity?.disableTouches()
-    }
-
-    override fun enableTouches() {
-        activity?.enableTouches()
-    }
-
     override fun showProgress() {
         progressBar.show()
     }
@@ -91,6 +92,8 @@ class CatsFragment : Fragment(), CatsView {
     }
 
     companion object {
+        const val TAG = "CatsFragment"
+
         fun newInstance() = CatsFragment()
     }
 }

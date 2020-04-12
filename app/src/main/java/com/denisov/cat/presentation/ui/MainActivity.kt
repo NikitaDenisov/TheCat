@@ -2,8 +2,6 @@ package com.denisov.cat.presentation.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
 import androidx.fragment.app.Fragment
 import com.denisov.cat.R
 import kotlinx.android.synthetic.main.activity_main.*
@@ -14,24 +12,37 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val catsFragment = CatsFragment.newInstance()
+        val favoriteFragment = FavoritesFragment.newInstance()
+
         navigationView.setOnNavigationItemSelectedListener {
             when {
                 it.itemId == R.id.cats && navigationView.selectedItemId != R.id.cats -> {
-                    showFragment(CatsFragment.newInstance())
+                    showFragment(catsFragment, CatsFragment.TAG)
                 }
                 it.itemId == R.id.favorites && navigationView.selectedItemId != R.id.favorites -> {
-                    showFragment(FavoritesFragment.newInstance())
+                    showFragment(favoriteFragment, FavoritesFragment.TAG)
                 }
             }
             true
         }
-        showFragment(CatsFragment.newInstance())
+        showFragment(catsFragment, CatsFragment.TAG)
     }
 
-    private fun showFragment(fragment: Fragment) {
+    private fun showFragment(fragment: Fragment, tag: String) {
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.fragmentContainer, fragment)
+            .apply {
+                if (fragment.isAdded) {
+                    show(fragment)
+                } else {
+                    add(R.id.fragmentContainer, fragment, tag)
+                }
+                supportFragmentManager
+                    .fragments
+                    .filter { it != fragment }
+                    .forEach { hide(it) }
+            }
             .commitNow()
     }
 }

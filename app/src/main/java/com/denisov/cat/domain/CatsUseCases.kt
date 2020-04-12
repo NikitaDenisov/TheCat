@@ -8,11 +8,7 @@ import javax.inject.Inject
 
 class CatsUseCases @Inject constructor(private val catsDao: CatsDao) {
 
-    fun addCatToFavorite(cat: Cat): Completable =
-        Completable.fromCallable { catsDao.insert(cat.mapToCatEntity()) }
+    fun addCatToFavorite(cat: Cat): Completable = catsDao.insert(cat.mapToCatEntity())
 
-    fun deleteCatFromFavorite(cat: Cat): Completable =
-        Completable.fromCallable { catsDao.delete(cat.mapToCatEntity()) }
-
-    fun clearFavorites(): Completable = Completable.fromCallable { catsDao.deleteAll() }
+    fun deleteCatFromFavorite(cat: Cat): Completable = catsDao.delete(cat.mapToCatEntity())
 }

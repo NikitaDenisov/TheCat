@@ -1,6 +1,7 @@
 package com.denisov.cat.di.component
 
 import android.content.Context
+import androidx.fragment.app.Fragment
 import com.denisov.cat.di.ActivityContext
 import com.denisov.cat.di.getAppComponent
 import com.denisov.cat.di.module.FavoritesScreenModule
@@ -23,7 +24,7 @@ interface FavoritesComponent {
     interface Builder {
 
         @BindsInstance
-        fun fragment(fragment: FavoritesFragment): Builder
+        fun fragment(fragment: Fragment): Builder
 
         @BindsInstance
         fun context(@ActivityContext context: Context): Builder

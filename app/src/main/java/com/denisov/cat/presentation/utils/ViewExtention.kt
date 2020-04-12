@@ -15,3 +15,9 @@ fun View.hide() {
 fun View.invisible() {
     visibility = View.INVISIBLE
 }
+
+inline fun View.showIfOrHide(crossinline condition: () -> Boolean) {
+    takeIf { condition() }
+        ?.show()
+        ?: hide()
+}

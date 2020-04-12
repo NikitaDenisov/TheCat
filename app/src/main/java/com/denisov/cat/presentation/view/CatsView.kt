@@ -10,10 +10,6 @@ interface CatsView : BaseView {
 
     fun showError(message: String)
 
-    fun disableTouches()
-
-    fun enableTouches()
-
     fun showProgress()
 
     fun hideProgress()

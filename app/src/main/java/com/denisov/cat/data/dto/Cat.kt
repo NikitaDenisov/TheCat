@@ -9,7 +9,30 @@ data class Cat(
     val width: Int,
     val url: String,
     val isFavorite: Boolean
-) : Serializable
+) : Serializable {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Cat
+
+        if (id != other.id) return false
+        if (height != other.height) return false
+        if (width != other.width) return false
+        if (url != other.url) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + height
+        result = 31 * result + width
+        result = 31 * result + url.hashCode()
+        return result
+    }
+}
 
 fun CatEntity.mapToCatDto(isFavorite: Boolean = false) = Cat(
     id,

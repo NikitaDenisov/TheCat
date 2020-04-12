@@ -7,5 +7,5 @@ interface FavoritesView : BaseView {
 
     fun setViewHolderModels(viewHolderModels: List<ViewHolderModel>)
 
-    fun showEmptyView()
+    fun showEmptyView(show: Boolean)
 }
